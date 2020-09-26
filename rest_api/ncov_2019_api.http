@@ -1,0 +1,37 @@
+# @name getToken
+POST {{baseUrl}}/token
+Authorization: Basic {{authorization}}
+
+
+###
+# @name refreshToken
+#POST {{baseUrl}}/refreshToken
+#Authorization: Basic {{authorization}}
+
+###
+# @name getCases
+@accessToken = {{getToken.response.body.$.access_token}}
+
+GET {{baseUrl}}/cases
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+GET {{baseUrl}}/casesSuspected
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+GET {{baseUrl}}/casesConfirmed
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+GET {{baseUrl}}/deaths
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+GET {{baseUrl}}/recovered
+Accept: application/json
+Authorization: Bearer {{accessToken}}
