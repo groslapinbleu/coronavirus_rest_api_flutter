@@ -4,12 +4,6 @@ Authorization: Basic {{authorization}}
 
 
 ###
-# @name refreshToken
-# je ne sais pas comment rafraichir mon token...
-#POST {{baseUrl}}/refreshToken
-#Authorization: Basic {{authorization}}
-
-###
 # @name getCases
 @accessToken = {{getToken.response.body.$.access_token}}
 
