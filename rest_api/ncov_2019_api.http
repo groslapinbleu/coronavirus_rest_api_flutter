@@ -5,6 +5,7 @@ Authorization: Basic {{authorization}}
 
 ###
 # @name refreshToken
+# je ne sais pas comment rafraichir mon token...
 #POST {{baseUrl}}/refreshToken
 #Authorization: Basic {{authorization}}
 
