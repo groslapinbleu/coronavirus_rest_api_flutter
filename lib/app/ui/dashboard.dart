@@ -21,7 +21,7 @@ class _DashboardState extends State<Dashboard> {
   Widget build(BuildContext context) {
     final formatter = LastUpdatedDateFormater(
         date: _endpointsData != null
-            ? _endpointsData.values[Endpoint.cases].date
+            ? _endpointsData.values[Endpoint.cases]?.date
             : null);
 
     return Scaffold(
@@ -43,7 +43,7 @@ class _DashboardState extends State<Dashboard> {
               EndpointCard(
                 endpoint: endpoint,
                 data: _endpointsData != null
-                    ? _endpointsData.values[endpoint].value
+                    ? _endpointsData.values[endpoint]?.value
                     : null,
               ),
           ],
@@ -55,6 +55,10 @@ class _DashboardState extends State<Dashboard> {
   @override
   void initState() {
     super.initState();
+
+    final dataRepository = Provider.of<DataRepository>(context, listen: false);
+    _endpointsData = dataRepository
+        .getAllEndpointsCachedData(); // this retrieves data from shared preferences if any
     _updateData(); // this allows to populate the dashboard at startup
   }
 
