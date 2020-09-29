@@ -1,6 +1,12 @@
+import 'dart:io';
+
 import 'package:coronavirus_rest_api_flutter_course/app/repositories/data_repository.dart';
+import 'package:coronavirus_rest_api_flutter_course/app/repositories/endpoints_data.dart';
 import 'package:coronavirus_rest_api_flutter_course/app/services/api.dart';
 import 'package:coronavirus_rest_api_flutter_course/app/ui/endpoint_card.dart';
+import 'package:coronavirus_rest_api_flutter_course/app/ui/last_updated_status_text.dart';
+import 'package:coronavirus_rest_api_flutter_course/app/ui/show_alert_dialog.dart';
+import 'package:coronavirus_rest_api_flutter_course/app/util/last_updated_date_formater.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -10,54 +16,69 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
-  int _cases;
-  int _casesSuspected;
-  int _casesConfirmed;
-  int _deaths;
-  int _recovered;
-
+  EndpointsData _endpointsData;
   @override
   Widget build(BuildContext context) {
+    final formatter = LastUpdatedDateFormater(
+        date: _endpointsData != null
+            ? _endpointsData.values[Endpoint.cases].date
+            : null);
+
     return Scaffold(
       floatingActionButton: IconButton(
           icon: Icon(Icons.refresh, color: Colors.white),
-          onPressed: () => _refresh(context)),
+          onPressed: () => _updateData()),
       appBar: AppBar(
         title: Text('Coronavirus Tracker'),
+        centerTitle: true,
       ),
-      body: ListView(
-        children: [
-          EndpointCard(
-            title: 'cases',
-            data: _cases,
-          ),
-          EndpointCard(title: 'cases suspected', data: _casesSuspected),
-          EndpointCard(title: 'cases confirmed', data: _casesConfirmed),
-          EndpointCard(title: 'deaths', data: _deaths),
-          EndpointCard(title: 'recovered', data: _recovered),
-        ],
+      body: RefreshIndicator(
+        onRefresh: _updateData,
+        child: ListView(
+          children: [
+            LastUpdatedStatusText(
+              text: formatter.formatDateToString() ?? '',
+            ),
+            for (var endpoint in Endpoint.values)
+              EndpointCard(
+                endpoint: endpoint,
+                data: _endpointsData != null
+                    ? _endpointsData.values[endpoint].value
+                    : null,
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  void _refresh(BuildContext context) async {
-    print('_refresh');
+  @override
+  void initState() {
+    super.initState();
+    _updateData(); // this allows to populate the dashboard at startup
+  }
+
+  Future<void> _updateData() async {
+    print('_updateData');
     final dataRepository = Provider.of<DataRepository>(context, listen: false);
-
-    final cases = await dataRepository.getEndpointData(Endpoint.cases);
-    final casesSuspected =
-        await dataRepository.getEndpointData(Endpoint.casesSuspected);
-    final casesConfirmed =
-        await dataRepository.getEndpointData(Endpoint.casesConfirmed);
-    final deaths = await dataRepository.getEndpointData(Endpoint.deaths);
-    final recovered = await dataRepository.getEndpointData(Endpoint.recovered);
-
-    setState(() {
-      _cases = cases;
-      _casesSuspected = casesSuspected;
-      _casesConfirmed = casesConfirmed;
-      _deaths = deaths;
-      _recovered = recovered;
-    });
+    try {
+      final endpointsData = await dataRepository.getAllEndPointsData();
+      setState(() {
+        _endpointsData = endpointsData;
+      });
+    } on SocketException catch (_) {
+      showAlertDialog(
+          context: context,
+          title: 'Connectivity Error',
+          content: 'Could not get data from server. Try again later',
+          defaultActionText: 'OK');
+    } catch (_) {
+      // any other type of exception
+      showAlertDialog(
+          context: context,
+          title: 'Unknown error',
+          content: 'Please contact support or try again later',
+          defaultActionText: 'OK');
+    }
   }
 }
